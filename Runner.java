@@ -8,10 +8,15 @@ import javafx.scene.image.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import java.io.FileReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 ;/**
  * Hold down an arrow key to have your hero move around the screen.
@@ -19,7 +24,9 @@ import javafx.scene.canvas.GraphicsContext;
  */
 public class Runner extends Application {
 
-    private static final double W = 500, H = 500;
+    private static double W = 500;
+
+	private static double H = 500;
 
     private static final String HERO_IMAGE_LOC = "application/img/hero.png";
 
@@ -32,6 +39,8 @@ public class Runner extends Application {
     private static final String ARR = "application/img/VTOL_2.png";
 
 	protected static final KeyCode DOWN = null;
+
+	public char[][] dongeon = null;
 
     final Image image1 = new Image("file:"+IMAGECOULOIR);
     final Image image2 = new Image("file:"+VIRAGEDROITBAS);
@@ -48,13 +57,14 @@ public class Runner extends Application {
     public int nbLigne=0;  
     public int case_precedente[]= {1,1};
     public boolean trouveSortie=false;
+    public int nbcharligne = 0,nbligne=0;
     
     
     public static String dungeon2 =
                     "X X X X X X X X X X\n"+
                     "X F L L L L L L T X\n"+
                     "X X X X X X X X M X\n"+
-                    "X X X + R X X X M X\n"+
+                    "X X X 1 R X X X M X\n"+
                     "X X X X M X X X M X\n"+
                     "X X X X U L L L H X\n"+
                     "X X X X M X X X e X\n"+
@@ -62,6 +72,13 @@ public class Runner extends Application {
     
     public Runner(){
     	
+    }
+    public void DeplacerHero(Chevalier al){
+    		int deplacementx= al.getX() - case_precedente[0];
+			int deplacementy = al.getY() - case_precedente[1];
+			case_precedente[0] = al.getX();
+			case_precedente[1] = al.getY();
+			moveHeroBy(deplacementx * inc,deplacementy*inc);
     }
    
     @Override
@@ -73,30 +90,27 @@ public class Runner extends Application {
         // on retourne l'image pour que le chevalier regarde vers la drroite
         hero.setRotate(180);
         
-        //Création de l'interface graphique 
+        dongeon = ImporterCarte("application/data/dongeon3.txt");
+        
+        //Creation de l'interface graphique 
         Canvas canvas = new Canvas (W,H);
         final GraphicsContext gc = canvas.getGraphicsContext2D();
         Group root = new Group();
+        // creation du labyrinthe graphique
         drawShapes(gc);
         root.getChildren().add(canvas);
         
+        // Affichage de l'interface graphique
         Scene scene = new Scene(root, W, H, Color.WHITE);
         //root.getChildren().add(canvas);
         root.getChildren().add(hero);
         //root.setChild(hero, 1);
         
-        String []tabDungeon = dungeon2.split("\n");
-        char [][] dongeon = new char[tabDungeon[0].length()][tabDungeon.length];
-        for (int i=0 ; i < tabDungeon.length ; i++)
-        {
-            String []tabcrt = tabDungeon[i].split(" ");
-            for (int c=0 ; c < tabcrt.length ; c ++)
-            {
-                dongeon[c][i]=tabcrt[c].charAt(0);
-            }
-        }
+        // Création de l'objet chevalier et deplacement à la position iniitale
         Chevalier al = new Chevalier(1,1,dongeon[1][1]);
         moveHeroTo(75, 75);
+        
+        
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
@@ -120,90 +134,87 @@ public class Runner extends Application {
             	int deplacementy=0;
             	
                 switch (event.getCode()) {
-                    case UP:    al.determinerDeplacementDepart(dongeon);
-                    			
-                     			deplacementx= al.getX() - case_precedente[0];
-                     			deplacementy = al.getY() - case_precedente[1];
-                     			case_precedente[0] = al.getX();
-                     			case_precedente[1] = al.getY();
-                     			moveHeroBy(deplacementx * inc,deplacementy*inc);
+                    case UP:    al.determinerDeplacementDepart(dongeon);                    			
+                    			DeplacerHero(al);
+                     			
                     			break;
                     case DOWN:  
                     		
                     			switch (al.getCaseCourante()) {
                                 	case 'C':
-                                		al.demiTour(dongeon);                                    
+                                		al.demiTour(dongeon);    
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'D':
                                 		al.demiTour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'E':
                                 		al.demiTour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'F':
                                 		al.demiTour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'R':
                                 		al.angle90(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'S':
                                 		al.angle90(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'T':
                                     	al.angle90(dongeon);
-                                    	deplacementx = al.getX() - case_precedente[0];
-                             			deplacementy = al.getY() - case_precedente[1];
-                             			case_precedente[0] = al.getX();
-                             			case_precedente[1] = al.getY();
-                             			moveHeroBy(deplacementx * inc,deplacementy * inc);                                		
+                                    	DeplacerHero(al);                               		
                                     	break;
 
                                 	case 'U':
                                 		al.angle90(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'G':
                                 		al.carrefour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'H':
                                 		al.carrefour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'I':
                                 		al.carrefour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
 
                                 	case 'J':
                                 		al.carrefour(dongeon);
+                                		DeplacerHero(al);
                                 		break;
                                 		
                                 	case 'L':
                                 		al.toutDroit(dongeon);
-                                		deplacementx = al.getX() - case_precedente[0];
-                             			deplacementy = al.getY() - case_precedente[1];
-                             			case_precedente[0] = al.getX();
-                             			case_precedente[1] = al.getY();
-                             			moveHeroBy(deplacementx * inc,deplacementy * inc);
+                                		DeplacerHero(al);
                                 		break;
                                 		
                                 	case 'M':
                                 		al.toutDroit(dongeon);
-                                		deplacementx = al.getX() - case_precedente[0];
-                             			deplacementy = al.getY() - case_precedente[1];
-                             			case_precedente[0] = al.getX();
-                             			case_precedente[1] = al.getY();
-                             			moveHeroBy(deplacementx * inc,deplacementy * inc);                                		
+                                		DeplacerHero(al);                               		
                                 		break;
                                 		
                                 	case '1':case'2':case'3':case '4':
+                                		DeplacerHero(al);
                                 		trouveSortie=true;
+                                		System.out.println("Arrête de taper sur le clavier, Alphonse est arrivé");
 
                     			} 
                         
@@ -237,31 +248,85 @@ public class Runner extends Application {
         timer.start();
     }
 
-    private void moveHeroBy(int dx, int dy) {
-        if (dx == 0 && dy == 0) return;
+    /***
+     * Deplace le chevalier en fonction des coordonnées en entree
+     * @param double x
+     * @param double y
+     */
+    	private void moveHeroBy(int dx, int dy) {
+    		if (dx == 0 && dy == 0) return;
 
-        final double cx = hero.getBoundsInLocal().getWidth()  / 2;
-        final double cy = hero.getBoundsInLocal().getHeight() / 2;
+        	final double cx = hero.getBoundsInLocal().getWidth()  / 2;
+        	final double cy = hero.getBoundsInLocal().getHeight() / 2;
 
-        double x = cx + hero.getLayoutX() + dx;
-        double y = cy + hero.getLayoutY() + dy;
+        	double x = cx + hero.getLayoutX() + dx;
+        	double y = cy + hero.getLayoutY() + dy;
 
-        moveHeroTo(x, y);
-    }
+        	moveHeroTo(x, y);
+    	}
+        
 
-    private void moveHeroTo(double x, double y) {
-        final double cx = hero.getBoundsInLocal().getWidth()  / 2;
-        final double cy = hero.getBoundsInLocal().getHeight() / 2;
+    	private void moveHeroTo(double x, double y) {
+    		final double cx = hero.getBoundsInLocal().getWidth()  / 2;
+    		final double cy = hero.getBoundsInLocal().getHeight() / 2;
 
-        if (x - cx >= 0 &&
-            x + cx <= W &&
-            y - cy >= 0 &&
-            y + cy <= H) {
-            hero.relocate(x - cx, y - cy);
-        }
-    }
+    		if (x - cx >= 0 &&
+    				x + cx <= W &&
+    				y - cy >= 0 &&
+    				y + cy <= H) {
+    			hero.relocate(x - cx, y - cy);
+    		}
+    	}
 
     public static void main(String[] args) { launch(args); }
+    
+/***
+ * Elle permet de recupérer le labyrinthe à partir de l'url d'un fichier
+ * Elle definit les dimensions du canvas
+ * @param String url
+ * @return char[][]
+ * @throws FileNotFoundException
+ */
+public char[][] ImporterCarte(String url) throws FileNotFoundException{
+
+        File file = new File(url);
+        Scanner scan = new Scanner(file);
+        String temp = "";
+        int i = 0, j = 0;
+        String donjon = "";
+        int k = 0;        
+
+        while (scan.hasNext()) {
+
+             temp = scan.nextLine();
+             nbcharligne = temp.length();
+             donjon = donjon+temp ; 
+             nbligne++;
+        }
+        char[][] myArray = new char[nbcharligne][nbligne];
+        char tab[] = donjon.toCharArray();
+        for (j = 0; j< nbligne ; j++) {
+
+            for (i = 0; i < nbcharligne; i++) {
+
+                myArray[i][j] = tab[k];
+                k++;    
+                System.out.print(myArray[i][j]);
+
+            }
+
+            System.out.println();
+
+        }
+        
+        // on définit les dimensions du canvas
+        W = nbcharligne*inc;
+        H = nbligne*inc;
+        
+        return myArray;
+    }
+
+		
     
     private void drawShapes(GraphicsContext gc) {
     	
@@ -291,100 +356,139 @@ public class Runner extends Application {
         if (cpt > 10) {
             gc.fillText(" TEST ", 20, 20);
 
-        }
+        }      
         
-        String []tabDungeon = dungeon2.split("\n");
         
-        for (int i=0 ; i < tabDungeon.length ; i++)
+        for (int i=0 ; i < nbligne ; i++)
         {
-            String []tabcrt = tabDungeon[i].split(" ");
-            for (int c=0 ; c < tabcrt.length ; c ++)
+            
+            for (int c=0 ; c < nbcharligne ; c ++)
             {
-                switch (tabcrt[c].charAt(0)) {
-                    case 'L' :
-                        //ImageView imageView = new ImageView(image1);
-                        // imageView.setViewport(croppedPortion);
-                        // imageView.setFitWidth(inc);
-                        // imageView.setFitHeight(inc);
-                        gc.drawImage(image1, inc * c,inc*i ,inc,inc);
-                        
-                        
-                        break;
-                    case 'M':
-                        iv = new ImageView(image1);
-                        iv.setRotate(90);
-                        SnapshotParameters params = new SnapshotParameters();
+            	Image rotatedImage = null;
+            	SnapshotParameters params = new SnapshotParameters();
+	switch (dongeon[c][i]) {
+				
+				
+				case 'L':
+					gc.drawImage(image1, inc * c, inc * i, inc, inc);
+					break;	
+				case 'M':
+					iv = new ImageView(image1);
+					iv.setRotate(90);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;					
+				case 'R':
+					gc.drawImage(image2, inc * c, inc * i, inc, inc);
+					break;
+				case 'S':
+					iv = new ImageView(image2);
+					iv.setRotate(90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;	
+				case 'T':
+					iv = new ImageView(image2);
+					iv.setRotate(-90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;			
+				case 'U':
+					iv = new ImageView(image2);
+					iv.setRotate(180);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;			
+				case 'G':
+					gc.drawImage(image3, inc * c, inc * i, inc, inc);
+					break;
+				case 'H':
+					iv = new ImageView(image3);
+					iv.setRotate(90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case 'I':
+					iv = new ImageView(image3);
+					iv.setRotate(-90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case 'J':
+					iv = new ImageView(image3);
+					iv.setRotate(180);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case '1':
+					gc.drawImage(image5, inc * c, inc * i, inc, inc);
+					break;
+				case '2':
+					iv = new ImageView(image5);
+					iv.setRotate(90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case '3':
+					iv = new ImageView(image5);
+					iv.setRotate(-90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case '4':
+					iv = new ImageView(image5);
+					iv.setRotate(180);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case 'C':
+					gc.drawImage(image4, inc * c, inc * i, inc, inc);
+					break;
 
-                        Image rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
+				case 'D':
+					iv = new ImageView(image4);
+					iv.setRotate(90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case 'E':
+					iv = new ImageView(image4);
+					iv.setRotate(-90);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case 'F':
+					iv = new ImageView(image4);
+					iv.setRotate(180);
+					params = new SnapshotParameters();
+					params.setFill(Color.TRANSPARENT);
+					rotatedImage = iv.snapshot(params, null);
+					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
 
-
-                        break;
-                    case 'T':
-                        gc.drawImage(image2, inc * c,inc*i ,inc,inc);
-                        break;
-                    
-                    case 'H':
-                        iv = new ImageView(image3);
-                        iv.setRotate(90);
-                        params = new SnapshotParameters();
-                        params.setFill(Color.TRANSPARENT);
-                        rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
-
-
-                        break;
-                    case '+':
-                        iv = new ImageView(image5);
-                        iv.setRotate(-90);
-                        params = new SnapshotParameters();
-                        params.setFill(Color.TRANSPARENT);
-                        rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
-
-
-                        break;
-                    case 'F':
-                        iv = new ImageView(image4);
-                        iv.setRotate(180);
-                        params = new SnapshotParameters();
-                        params.setFill(Color.TRANSPARENT);
-                        rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
-
-
-                        break;
-                    case 'D':
-                        iv = new ImageView(image4);
-                        iv.setRotate(90);
-                        params = new SnapshotParameters();
-                        params.setFill(Color.TRANSPARENT);
-                        rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
-
-
-                        break;
-                    case 'U':
-                        iv = new ImageView(image2);
-                        iv.setRotate(180);
-                        params = new SnapshotParameters();
-                        params.setFill(Color.TRANSPARENT);
-                        rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
-
-
-                        break;
-                    case 'R':
-                        iv = new ImageView(image2);
-                        iv.setRotate(0);
-                        params = new SnapshotParameters();
-                        params.setFill(Color.TRANSPARENT);
-                        rotatedImage = iv.snapshot(params, null);
-                        gc.drawImage(rotatedImage, inc * c,inc*i ,inc,inc);
-
-
-                        break;
-                }
+				}
             }
         }       
 
