@@ -12,12 +12,9 @@ Alphonse doit se déplacer dans un labyrinthe, on récupére le labyrinthe par un f
 class Character {
 private int x = 1; // position d'Alphonse en horizontal
 private int y = 1; // position d'Alphonse en vertical
-private char case_courante; // la case où Alphonse se trouve, elle change à chaque
-// déplacement
-private int[] case_precedente={1,1}; // la case où Alphonse se trouvait, elle change à
-// chaque déplacement
-private String direction = "Droite"; // la direction vers laquelle vas Alphonse,
-// elle est mise à jour si besoin
+private char case_courante; // la case où Alphonse se trouve, elle change à chaque déplacement
+private int[] case_precedente={1,1}; // la case où Alphonse se trouvait, elle change à chaque déplacement
+private String direction = "Droite"; // la direction vers laquelle vas Alphonse, elle est mise à jour si besoin
 
 
 // Constructeur
