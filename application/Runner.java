@@ -7,6 +7,8 @@ import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
@@ -17,6 +19,12 @@ import java.io.FileReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import com.sun.glass.ui.Timer;
 
 ;/**
  * Hold down an arrow key to have your hero move around the screen.
@@ -28,25 +36,30 @@ public class Runner extends Application {
 
 	private static double H = 500;
 
-    private static final String HERO_IMAGE_LOC = "application/img/hero.png";
-
+    private static final String HERO_IMAGE_LOC = "application/img/2d.png";
+    private static final String MOB_IMAGE_LOC = "application/img/mob3.png";
     public Image heroImage;
     public Node  hero;
+    public Image mobImage;
+    public static Node  mob;
+    
     private static final String IMAGECOULOIR = "application/img/IN_1.png";    
     private static final String VIRAGEDROITBAS = "application/img/LN_1.png";
     private static final String CROISEMENT3 = "application/img/TN_1.png";
     private static final String END = "application/img/EN_1.png";
     private static final String ARR = "application/img/VTOL_2.png";
+    private static final String MUR = "application/img/mur.jpg";
 
 	protected static final KeyCode DOWN = null;
 
-	public char[][] dongeon = null;
+	public static char[][] donjon = null;
 
     final Image image1 = new Image("file:"+IMAGECOULOIR);
     final Image image2 = new Image("file:"+VIRAGEDROITBAS);
     final Image image3 = new Image("file:"+CROISEMENT3);
     final Image image4 = new Image("file:"+END);
     final Image image5 = new Image("file:"+ARR);
+    final Image image6 = new Image("file:"+MUR);
     ImageView iv;
     
     static int inc = 50; // nombre de pixels representant une unité de déplacement
@@ -55,230 +68,220 @@ public class Runner extends Application {
     public String [] labyrinthe = null;
     public int nbCharParLigne=0;
     public int nbLigne=0;  
-    public int case_precedente[]= {1,1};
-    public boolean trouveSortie=false;
+    public static int case_precedente[]= {1,1};
+    public int case_arrivee[]= {1,1};
+    public static boolean trouveHero=false;
+
+	private static Character mobi;
     public int nbcharligne = 0,nbligne=0;
     
     
-    public static String dungeon2 =
-                    "X X X X X X X X X X\n"+
-                    "X F L L L L L L T X\n"+
-                    "X X X X X X X X M X\n"+
-                    "X X X 1 R X X X M X\n"+
-                    "X X X X M X X X M X\n"+
-                    "X X X X U L L L H X\n"+
-                    "X X X X M X X X e X\n"+
-                    "X X X X X X X X X X\n" ;
+    
     
     public Runner(){
     	
     }
-    public void DeplacerHero(Chevalier al){
-    		int deplacementx= al.getX() - case_precedente[0];
-			int deplacementy = al.getY() - case_precedente[1];
-			case_precedente[0] = al.getX();
-			case_precedente[1] = al.getY();
-			moveHeroBy(deplacementx * inc,deplacementy*inc);
-    }
-   
+    
+    public static void main(String[] args) { launch(args); }
+    
     @Override
     public void start(Stage stage) throws Exception 
     {
+    	stage.setTitle("L'invicible Alphonse");
+    	StackPane rootPane = new StackPane();
+    	Pane paneHero = new Pane();
+    	Pane paneMob = new Pane();
+    	
+    	
     	//Creation de l'image du hero
-    	heroImage = new Image(HERO_IMAGE_LOC, 30, 30, false, false);    	
-        hero = new ImageView(heroImage);  
-        // on retourne l'image pour que le chevalier regarde vers la drroite
-        hero.setRotate(180);
+    	heroImage = new Image(HERO_IMAGE_LOC, 50, 50, false, false);    	
+        hero = new ImageView(heroImage);         
         
-        dongeon = ImporterCarte("application/data/dongeon3.txt");
+        //Creation de l'image du mob
+    	mobImage = new Image(MOB_IMAGE_LOC, 60, 60, false, false);    	
+        mob = new ImageView(mobImage);
+        
+        // on retourne l'image pour que le chevalier regarde vers la drroite
+        //hero.setRotate(180);
+        
+        donjon = ImporterCarte("application/data/jeu.txt");
         
         //Creation de l'interface graphique 
         Canvas canvas = new Canvas (W,H);
         final GraphicsContext gc = canvas.getGraphicsContext2D();
-        Group root = new Group();
-        // creation du labyrinthe graphique
+        
+        
+        rootPane.getChildren().add(canvas);
+        // creation du labyrinthe graphique et du quadrillage
         drawShapes(gc);
-        root.getChildren().add(canvas);
         
+        // ajout des elements graphique du hero et du mob au rootPane
+    	paneHero.getChildren().add(hero);
+    	paneMob.getChildren().add(mob);
+    	rootPane.getChildren().addAll(paneHero,paneMob);
+        
+
         // Affichage de l'interface graphique
-        Scene scene = new Scene(root, W, H, Color.WHITE);
-        //root.getChildren().add(canvas);
-        root.getChildren().add(hero);
-        //root.setChild(hero, 1);
+        Scene scene = new Scene(rootPane, W, H, Color.WHITE);        
+    	stage.setScene(scene);;
+    	stage.show();
         
-        // Création de l'objet chevalier et deplacement à la position iniitale
-        Chevalier al = new Chevalier(1,1,dongeon[1][1]);
-        moveHeroTo(75, 75);
+        // Positionnement du node hero        
+        MoveCharacter(hero,50, 50);
+        
+        // creation du mob et deplacement à la case d'arrivee        
+        Character mobi = new Character(case_arrivee[0],case_arrivee[1],donjon[case_arrivee[0]][case_arrivee[1]]);
+        
+        MoveCharacter(mob,mobi.getX()*inc,mobi.getY()*inc);  
         
         
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
                 switch (event.getCode()) {
-                    //case UP:    goNorth = true; break;
+                    case UP:    goNorth = true; break;
                     case DOWN:  goSouth = true; break;
                     case LEFT:  goWest  = true; break;
                     case RIGHT: goEast  = true; break;
                     case SHIFT: running = true; break;
+                    default: break;
                 }
                 System.out.println(event.getCode());            
+                DeplacerMob(mobi);
+                case_precedente= mobi.getCasePrecedente();
+                int deplacementx= mobi.getX() - case_precedente[0];
+                int deplacementy= mobi.getY() - case_precedente[1];
+                case_precedente[0] = mobi.getX();
+                case_precedente[1] = mobi.getY();
                 
+                MoveCharacter(mob,(deplacementx*inc),(deplacementy*inc));
             }
         });
 
         scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
-            public void handle(KeyEvent event) {
-            	
-            	int deplacementx=0;
-            	int deplacementy=0;
+            public void handle(KeyEvent event) { 
             	
                 switch (event.getCode()) {
-                    case UP:    al.determinerDeplacementDepart(dongeon);                    			
-                    			DeplacerHero(al);
-                     			
-                    			break;
-                    case DOWN:  
-                    		
-                    			switch (al.getCaseCourante()) {
-                                	case 'C':
-                                		al.demiTour(dongeon);    
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'D':
-                                		al.demiTour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'E':
-                                		al.demiTour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'F':
-                                		al.demiTour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'R':
-                                		al.angle90(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'S':
-                                		al.angle90(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'T':
-                                    	al.angle90(dongeon);
-                                    	DeplacerHero(al);                               		
-                                    	break;
-
-                                	case 'U':
-                                		al.angle90(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'G':
-                                		al.carrefour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'H':
-                                		al.carrefour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'I':
-                                		al.carrefour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-
-                                	case 'J':
-                                		al.carrefour(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-                                		
-                                	case 'L':
-                                		al.toutDroit(dongeon);
-                                		DeplacerHero(al);
-                                		break;
-                                		
-                                	case 'M':
-                                		al.toutDroit(dongeon);
-                                		DeplacerHero(al);                               		
-                                		break;
-                                		
-                                	case '1':case'2':case'3':case '4':
-                                		DeplacerHero(al);
-                                		trouveSortie=true;
-                                		System.out.println("Arrête de taper sur le clavier, Alphonse est arrivé");
-
-                    			} 
-                        
-                        break;
+                    case UP:    goNorth = false; break;
+                    case DOWN:  goSouth = false; break;
                     case LEFT:  goWest  = false; break;
                     case RIGHT: goEast  = false; break;
                     case SHIFT: running = false; break;
-                }
-               
+                    default: break;
+                }  
+                
             }
             
         });
-
-        stage.setScene(scene);
-        stage.show();
+        
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 int dx = 0, dy = 0;
 
-                //if (goNorth) dy -= 1;
-                //if (goSouth) dy += 1;
-                if (goEast)  dx += 1;
-                if (goWest)  dx -= 1;
-                if (running) { dx *= 3; dy *= 3; }
+                if (goNorth) dy -= 3;
+                if (goSouth) dy += 3;
+                if (goEast)  dx += 3;
+                if (goWest)  dx -= 3;
+                //if (running) { dx *= 5; dy *= 5; }
 
-                moveHeroBy(dx, dy);
+                
+                MoveCharacter(hero,dx, dy);
+                
             }
         };
+        
         timer.start();
+        
     }
+    
+   
+    
+    public static void DeplacerMob(Character mobi){
+    	
+    	switch (mobi.getCaseCourante()) {
+    	
+    	case 'C':
+    		mobi.DemiTour(donjon);			break;
+
+    	case 'D':
+    		mobi.DemiTour(donjon);			break;
+
+    	case 'E':
+    		mobi.DemiTour(donjon);			break;
+
+    	case 'F':
+    		mobi.DemiTour(donjon);			break;
+    	case 'G':
+    		mobi.Carrefour(donjon);    		break;
+
+    	case 'H':
+    		mobi.Carrefour(donjon);	 		break;
+
+    	case 'I':
+    		mobi.Carrefour(donjon);  		break;
+
+    	case 'J':
+    		mobi.Carrefour(donjon);   		break;
+    		
+    	case 'L':
+    		mobi.ToutDroit(donjon);   		break;
+    		
+    	case 'M':
+    		mobi.ToutDroit(donjon);			break;
+
+    	case 'R':
+    		mobi.Angle90(donjon);			break;
+
+    	case 'S':
+    		mobi.Angle90(donjon);			break;
+
+    	case 'T':
+    		mobi.Angle90(donjon);			break;
+
+    	case 'U':
+    		mobi.Angle90(donjon);			break;    	
+    		
+    	case '1':case'2':case'3':case '4':
+    		mobi.Depart(donjon);    		break;
+    		//if(hero)
+    		
+    		//trouveSortie=true;
+    		//System.out.println("Arrête de taper sur le clavier, Alphonse est arrivé");
+
+	} 
+    	MoveCharacter(mob,(mobi.getX()*inc),(mobi.getY()*inc));
+    	
+    }
+   
+    
 
     /***
-     * Deplace le chevalier en fonction des coordonnées en entree
+     * Deplace le node aux coordonnees X et X
      * @param double x
      * @param double y
      */
-    	private void moveHeroBy(int dx, int dy) {
+    	private static void MoveCharacter(Node charac, int dx, int dy) {
     		if (dx == 0 && dy == 0) return;
 
-        	final double cx = hero.getBoundsInLocal().getWidth()  / 2;
-        	final double cy = hero.getBoundsInLocal().getHeight() / 2;
+        	final double cx = charac.getBoundsInLocal().getWidth()  / 2;
+        	final double cy = charac.getBoundsInLocal().getHeight() / 2;
 
-        	double x = cx + hero.getLayoutX() + dx;
-        	double y = cy + hero.getLayoutY() + dy;
+        	double x = cx + charac.getLayoutX() + dx;
+        	double y = cy + charac.getLayoutY() + dy;
 
-        	moveHeroTo(x, y);
-    	}
-        
-
-    	private void moveHeroTo(double x, double y) {
-    		final double cx = hero.getBoundsInLocal().getWidth()  / 2;
-    		final double cy = hero.getBoundsInLocal().getHeight() / 2;
-
-    		if (x - cx >= 0 &&
+        	if (x - cx >= 0 &&
     				x + cx <= W &&
     				y - cy >= 0 &&
     				y + cy <= H) {
-    			hero.relocate(x - cx, y - cy);
+        		charac.relocate(x - cx, y - cy);
     		}
-    	}
+    	} 
+    	
 
-    public static void main(String[] args) { launch(args); }
+    
     
 /***
  * Elle permet de recupérer le labyrinthe à partir de l'url d'un fichier
@@ -287,6 +290,7 @@ public class Runner extends Application {
  * @return char[][]
  * @throws FileNotFoundException
  */
+
 public char[][] ImporterCarte(String url) throws FileNotFoundException{
 
         File file = new File(url);
@@ -307,9 +311,14 @@ public char[][] ImporterCarte(String url) throws FileNotFoundException{
         char tab[] = donjon.toCharArray();
         for (j = 0; j< nbligne ; j++) {
 
-            for (i = 0; i < nbcharligne; i++) {
+            for (i = 0; i < nbcharligne; i++) 
+            {
 
                 myArray[i][j] = tab[k];
+                if(myArray[i][j] == '1'|| myArray[i][j] == '2' || myArray[i][j] == '3' || myArray[i][j] == '4'){
+                	case_arrivee[0] = i;
+                	case_arrivee[1] = j;
+                }
                 k++;    
                 System.out.print(myArray[i][j]);
 
@@ -366,7 +375,7 @@ public char[][] ImporterCarte(String url) throws FileNotFoundException{
             {
             	Image rotatedImage = null;
             	SnapshotParameters params = new SnapshotParameters();
-	switch (dongeon[c][i]) {
+	switch (donjon[c][i]) {
 				
 				
 				case 'L':
@@ -486,6 +495,10 @@ public char[][] ImporterCarte(String url) throws FileNotFoundException{
 					params.setFill(Color.TRANSPARENT);
 					rotatedImage = iv.snapshot(params, null);
 					gc.drawImage(rotatedImage, inc * c, inc * i, inc, inc);
+					break;
+				case 'X':
+								
+					gc.drawImage(image6, inc * c, inc * i, inc, inc);
 					break;
 
 				}
