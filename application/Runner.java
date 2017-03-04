@@ -3,6 +3,7 @@ package application;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.scene.*;
 import javafx.scene.image.*;
 import javafx.scene.input.KeyCode;
@@ -129,32 +130,28 @@ public class Runner extends Application {
         // Positionnement du node hero        
         MoveCharacter(hero,50, 50);
         
-        // creation du mob et deplacement à la case d'arrivee        
-        Character mobi = new Character(case_arrivee[0],case_arrivee[1],donjon[case_arrivee[0]][case_arrivee[1]]);
+        Mob mobile = new Mob(donjon, case_arrivee,mob,hero,W,H);
         
-        MoveCharacter(mob,mobi.getX()*inc,mobi.getY()*inc);  
+        mobile.start();
+        
+        
         
         
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                switch (event.getCode()) {
-                    case UP:    goNorth = true; break;
-                    case DOWN:  goSouth = true; break;
-                    case LEFT:  goWest  = true; break;
-                    case RIGHT: goEast  = true; break;
-                    case SHIFT: running = true; break;
-                    default: break;
-                }
-                System.out.println(event.getCode());            
-                DeplacerMob(mobi);
-                case_precedente= mobi.getCasePrecedente();
-                int deplacementx= mobi.getX() - case_precedente[0];
-                int deplacementy= mobi.getY() - case_precedente[1];
-                case_precedente[0] = mobi.getX();
-                case_precedente[1] = mobi.getY();
-                
-                MoveCharacter(mob,(deplacementx*inc),(deplacementy*inc));
+            	
+            	
+	                switch (event.getCode()) {
+	                    case UP:    goNorth = true; break;
+	                    case DOWN:  goSouth = true; break;
+	                    case LEFT:  goWest  = true; break;
+	                    case RIGHT: goEast  = true; break;	                    
+	                    default: break;
+	                }
+	                System.out.println(event.getCode());  
+	                
+	                
             }
         });
 
@@ -166,8 +163,7 @@ public class Runner extends Application {
                     case UP:    goNorth = false; break;
                     case DOWN:  goSouth = false; break;
                     case LEFT:  goWest  = false; break;
-                    case RIGHT: goEast  = false; break;
-                    case SHIFT: running = false; break;
+                    case RIGHT: goEast  = false; break;                    
                     default: break;
                 }  
                 
@@ -199,62 +195,7 @@ public class Runner extends Application {
     
    
     
-    public static void DeplacerMob(Character mobi){
-    	
-    	switch (mobi.getCaseCourante()) {
-    	
-    	case 'C':
-    		mobi.DemiTour(donjon);			break;
-
-    	case 'D':
-    		mobi.DemiTour(donjon);			break;
-
-    	case 'E':
-    		mobi.DemiTour(donjon);			break;
-
-    	case 'F':
-    		mobi.DemiTour(donjon);			break;
-    	case 'G':
-    		mobi.Carrefour(donjon);    		break;
-
-    	case 'H':
-    		mobi.Carrefour(donjon);	 		break;
-
-    	case 'I':
-    		mobi.Carrefour(donjon);  		break;
-
-    	case 'J':
-    		mobi.Carrefour(donjon);   		break;
-    		
-    	case 'L':
-    		mobi.ToutDroit(donjon);   		break;
-    		
-    	case 'M':
-    		mobi.ToutDroit(donjon);			break;
-
-    	case 'R':
-    		mobi.Angle90(donjon);			break;
-
-    	case 'S':
-    		mobi.Angle90(donjon);			break;
-
-    	case 'T':
-    		mobi.Angle90(donjon);			break;
-
-    	case 'U':
-    		mobi.Angle90(donjon);			break;    	
-    		
-    	case '1':case'2':case'3':case '4':
-    		mobi.Depart(donjon);    		break;
-    		//if(hero)
-    		
-    		//trouveSortie=true;
-    		//System.out.println("Arrête de taper sur le clavier, Alphonse est arrivé");
-
-	} 
-    	MoveCharacter(mob,(mobi.getX()*inc),(mobi.getY()*inc));
-    	
-    }
+    
    
     
 
